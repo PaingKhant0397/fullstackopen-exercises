@@ -6,12 +6,14 @@ import PersonForm from './components/PersonForm';
 import Persons from './components/Persons';
 import Notification from './components/Notification';
 
+const initialNotification = { message: '', type: '' }
+
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [newFilter, setNewFilter] = useState('');
-  const [message, setMessage] = useState(null)
+  const [notification, setNotification] = useState(initialNotification)
 
   useEffect(() => {
     personServices
@@ -20,6 +22,16 @@ const App = () => {
         setPersons(initialPersons)
       })
   }, [])
+
+  const showError = (text) => {
+    setNotification({ message: text, type: "error" })
+    setTimeout(() => setNotification(initialNotification), 3000)
+  }
+
+  const showSuccess = (text) => {
+    setNotification({ message: text, type: "success" })
+    setTimeout(() => setNotification(initialNotification), 3000)
+  }
 
   const checkIfExist = (arr, name) => {
     return arr.some((person) => person.name === name);
@@ -45,10 +57,7 @@ const App = () => {
             setPersons(persons.map(person => person.id === updatedPerson.id ? updatedPerson : person))
             setNewName('')
             setNewNumber('')
-            setMessage(`Changed Number of ${updatedPerson.name} to ${updatedPerson.number}`)
-            setTimeout(() => {
-              setMessage(null)
-            }, 3000)
+            showSuccess(`Changed Number of ${updatedPerson.name} to ${updatedPerson.number}`)
           })
       }
     } else {
@@ -62,10 +71,7 @@ const App = () => {
           setPersons(persons.concat(addedPerson))
           setNewName('');
           setNewNumber('');
-          setMessage(`Added ${addedPerson.name}`)
-          setTimeout(() => {
-            setMessage(null)
-          }, 3000)
+          showSuccess(`Added ${addedPerson.name}`)
         })
     }
   };
@@ -78,6 +84,10 @@ const App = () => {
         .then(deletedPerson => {
           setPersons(persons.filter(person => person.id !== deletedPerson.id))
         })
+        .catch(error => {
+          showError(`${person.name} is already deleted`)
+          console.error("Delete Error", error)
+        })
     }
   }
 
@@ -89,7 +99,7 @@ const App = () => {
   return (
     <div>
       <h2>Phonebook</h2>
-      <Notification message={message} />
+      <Notification message={notification.message} type={notification.type} />
       <Filter value={newFilter} onChange={handleOnChangeFilter} />
 
       <h3>Add a new</h3>
